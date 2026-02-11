@@ -1,7 +1,48 @@
 import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { supabase } from "../supabase";
 
 function TherapistDash() {
   const navigate = useNavigate();
+  const [profile, setProfile] = useState(null);
+  const [patients, setPatients] = useState([]);
+
+  useEffect(() => {
+    fetchTherapist();
+    fetchPatients();
+  }, []);
+
+  const fetchTherapist = async () => {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+
+    const { data } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", user.id)
+      .single();
+
+    if (data) setProfile(data);
+  };
+
+  const fetchPatients = async () => {
+    const { data } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("role", "patient");
+
+    if (data) setPatients(data);
+  };
+
+  if (!profile) {
+    return <div style={{ padding: "40px" }}>Loading...</div>;
+  }
 
   return (
     <>
@@ -73,65 +114,38 @@ function TherapistDash() {
       <div className="td-page">
         <div className="td-header">
           <h2>Therapist Dashboard</h2>
-          <p>Name: <b>Dr. Meera</b> | Specialization: <b>Physiotherapy</b></p>
+          <p>
+            Name: <b>{profile.name}</b> | Role: <b>{profile.role}</b>
+          </p>
         </div>
 
         <div className="td-card">
           <h3>Patients Overview</h3>
 
-          {/* Patient 1 */}
-          <div className="patient">
-            <b>Arjun Kumar (21)</b>
-            <p>Condition: Motor Skill Rehab</p>
+          {patients.length === 0 && <p>No patients registered yet.</p>}
 
-            <div className="progress">
-              <div className="fill" style={{ width: "75%" }} />
+          {patients.map((patient) => (
+            <div className="patient" key={patient.id}>
+              <b>{patient.name} ({patient.age})</b>
+              <p>Condition: Rehabilitation Training</p>
+
+              <div className="progress">
+                <div className="fill" style={{ width: "60%" }} />
+              </div>
+
+              <div className="actions">
+                <button>Assign Exercise</button>
+                <button>Give Instructions</button>
+                <button
+                  onClick={() =>
+                    navigate(`/performance/${patient.name}`)
+                  }
+                >
+                  Performance Analysis
+                </button>
+              </div>
             </div>
-
-            <div className="actions">
-              <button>Assign Exercise</button>
-              <button>Give Instructions</button>
-              <button onClick={() => navigate("/performance/Arjun Kumar")}>
-                Performance Analysis
-              </button>
-            </div>
-          </div>
-
-          {/* Patient 2 */}
-          <div className="patient">
-            <b>Neha R (19)</b>
-            <p>Condition: Hand Coordination</p>
-
-            <div className="progress">
-              <div className="fill" style={{ width: "60%" }} />
-            </div>
-
-            <div className="actions">
-              <button>Assign Exercise</button>
-              <button>Give Instructions</button>
-              <button onClick={() => navigate("/performance/Neha R")}>
-                Performance Analysis
-              </button>
-            </div>
-          </div>
-
-          {/* Patient 3 */}
-          <div className="patient">
-            <b>Rahul S (24)</b>
-            <p>Condition: Reaction Training</p>
-
-            <div className="progress">
-              <div className="fill" style={{ width: "85%" }} />
-            </div>
-
-            <div className="actions">
-              <button>Assign Exercise</button>
-              <button>Give Instructions</button>
-              <button onClick={() => navigate("/performance/Rahul S")}>
-                Performance Analysis
-              </button>
-            </div>
-          </div>
+          ))}
         </div>
       </div>
     </>

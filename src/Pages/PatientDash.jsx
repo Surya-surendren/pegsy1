@@ -1,7 +1,40 @@
 import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { supabase } from "../supabase";
 
 function PatientDash() {
   const navigate = useNavigate();
+
+  const [profile, setProfile] = useState(null);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        navigate("/login");
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
+        .single();
+
+      if (!error && data) {
+        setProfile(data);
+      }
+    };
+
+    fetchProfile();
+  }, [navigate]);
+
+  if (!profile) {
+    return <div style={{ padding: "40px" }}>Loading...</div>;
+  }
 
   return (
     <>
@@ -13,7 +46,6 @@ function PatientDash() {
           font-family: "Segoe UI", sans-serif;
         }
 
-        /* Header */
         .pd-header {
           display: flex;
           align-items: center;
@@ -44,7 +76,6 @@ function PatientDash() {
           color: #475569;
         }
 
-        /* Games Tab */
         .games-tab {
           background: #0d9488;
           color: white;
@@ -64,7 +95,6 @@ function PatientDash() {
           transform: translateY(-3px);
         }
 
-        /* Grid */
         .pd-grid {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
@@ -83,7 +113,6 @@ function PatientDash() {
           margin-bottom: 15px;
         }
 
-        /* Progress */
         .game {
           margin-bottom: 18px;
         }
@@ -101,7 +130,6 @@ function PatientDash() {
           background: #14b8a6;
         }
 
-        /* Chart */
         .chart {
           display: flex;
           align-items: flex-end;
@@ -131,16 +159,18 @@ function PatientDash() {
       <div className="pd-page">
         {/* Header */}
         <div className="pd-header">
-          <div className="pd-avatar">P</div>
+          <div className="pd-avatar">
+            {profile.name?.charAt(0).toUpperCase()}
+          </div>
           <div>
             <h2>Patient Dashboard</h2>
             <p>
-              Name: <b>Arjun Kumar</b> | Age: <b>21</b>
+              Name: <b>{profile.name}</b> | Age: <b>{profile.age}</b>
             </p>
           </div>
         </div>
 
-        {/* SINGLE GAMES TAB */}
+        {/* Games Button */}
         <div
           className="games-tab"
           onClick={() => navigate("/games")}
@@ -153,8 +183,8 @@ function PatientDash() {
           {/* Profile */}
           <div className="pd-card">
             <h3>Profile</h3>
-            <p><b>Name:</b> Arjun Kumar</p>
-            <p><b>Age:</b> 21</p>
+            <p><b>Name:</b> {profile.name}</p>
+            <p><b>Age:</b> {profile.age}</p>
             <p><b>Condition:</b> Motor Skill Rehabilitation</p>
             <p><b>Assigned Therapist:</b> Dr. Meera</p>
           </div>

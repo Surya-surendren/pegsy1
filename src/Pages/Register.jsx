@@ -1,9 +1,48 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "../supabase";
 
 function Register() {
   const navigate = useNavigate();
+
+  const [name, setName] = useState("");
+  const [age, setAge] = useState("");
+  const [gender, setGender] = useState("");
   const [role, setRole] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  const handleRegister = async () => {
+    if (!name || !age || !gender || !role || !email || !password) {
+      alert("Please fill all fields");
+      return;
+    }
+
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+    });
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
+
+    const userId = data.user.id;
+
+    await supabase.from("profiles").insert([
+      {
+        id: userId,
+        name,
+        age,
+        gender,
+        role,
+      },
+    ]);
+
+    alert("Registration successful! Please login.");
+    navigate("/login");
+  };
 
   return (
     <>
@@ -68,10 +107,19 @@ function Register() {
         <div className="reg-card">
           <h2>Patient / Therapist Registration</h2>
 
-          <input type="text" placeholder="Full Name" />
-          <input type="number" placeholder="Age" />
+          <input
+            type="text"
+            placeholder="Full Name"
+            onChange={(e) => setName(e.target.value)}
+          />
 
-          <select>
+          <input
+            type="number"
+            placeholder="Age"
+            onChange={(e) => setAge(e.target.value)}
+          />
+
+          <select onChange={(e) => setGender(e.target.value)}>
             <option value="">Select Gender</option>
             <option>Male</option>
             <option>Female</option>
@@ -84,16 +132,19 @@ function Register() {
             <option value="therapist">Therapist</option>
           </select>
 
-          {role === "therapist" && (
-            <input type="text" placeholder="Therapist ID" />
-          )}
+          <input
+            type="email"
+            placeholder="Email"
+            onChange={(e) => setEmail(e.target.value)}
+          />
 
-          <input type="email" placeholder="Email" />
-          <input type="password" placeholder="Password" />
+          <input
+            type="password"
+            placeholder="Password"
+            onChange={(e) => setPassword(e.target.value)}
+          />
 
-          <button onClick={() => navigate("/login")}>
-            Register
-          </button>
+          <button onClick={handleRegister}>Register</button>
 
           <div
             className="login-link"

@@ -11,8 +11,10 @@ import Performance from "./Pages/Performance";
 function App() {
   return (
     <Routes>
-      {/* Public pages */}
+      {/* Home */}
       <Route path="/" element={<Home />} />
+
+      {/* Auth */}
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
 
@@ -20,14 +22,9 @@ function App() {
       <Route path="/patient-dashboard" element={<PatientDash />} />
       <Route path="/therapist-dashboard" element={<TherapistDash />} />
 
-      {/* Games */}
+      {/* Other */}
       <Route path="/games" element={<Games />} />
-
-      {/* Performance Analysis (patient specific) */}
-      <Route
-        path="/performance/:patientName"
-        element={<Performance />}
-      />
+      <Route path="/performance/:patientName" element={<Performance />} />
     </Routes>
   );
 }

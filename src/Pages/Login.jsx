@@ -1,23 +1,45 @@
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { supabase } from "../supabase";
 
 function Login() {
   const navigate = useNavigate();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("");
 
-  const handleLogin = () => {
-    if (!email || !password || !role) {
+  const handleLogin = async () => {
+    if (!email || !password) {
       alert("Please fill all fields");
       return;
     }
 
-    // TEMP LOGIN LOGIC (no backend yet)
-    if (role === "patient") {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      alert("Invalid login credentials");
+      return;
+    }
+
+    const userId = data.user.id;
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", userId)
+      .single();
+
+    if (!profile) {
+      alert("Profile not found!");
+      return;
+    }
+
+    if (profile.role === "patient") {
       navigate("/patient-dashboard");
-    } else if (role === "therapist") {
+    } else {
       navigate("/therapist-dashboard");
     }
   };
@@ -48,8 +70,7 @@ function Login() {
           margin-bottom: 25px;
         }
 
-        .login-card input,
-        .login-card select {
+        .login-card input {
           width: 100%;
           padding: 12px;
           margin-bottom: 14px;
@@ -97,12 +118,6 @@ function Login() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
-
-          <select value={role} onChange={(e) => setRole(e.target.value)}>
-            <option value="">Select Role</option>
-            <option value="patient">Patient</option>
-            <option value="therapist">Therapist</option>
-          </select>
 
           <button onClick={handleLogin}>Login</button>
 
